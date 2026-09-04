@@ -1,121 +1,158 @@
 #include "collision/CollisionDetect.h"
 
+#include "Eigen/Core"
 #include "contact/Contact.h"
 #include "rigidbody/RigidBody.h"
 #include "rigidbody/RigidBodySystem.h"
 
-CollisionDetect::CollisionDetect(RigidBodySystem* rigidBodySystem) : m_rigidBodySystem(rigidBodySystem)
-{
+CollisionDetect::CollisionDetect(RigidBodySystem *rigidBodySystem)
+    : m_rigidBodySystem(rigidBodySystem) {}
 
+void CollisionDetect::detectCollisions() {
+  // First, clear any existing contacts.
+  //
+  clear();
+
+  // Next, loop over all pairs of bodies and test for contacts.
+  //
+  auto bodies = m_rigidBodySystem->getBodies();
+  for (unsigned int i = 0; i < bodies.size(); ++i) {
+    for (unsigned int j = i + 1; j < bodies.size(); ++j) {
+      RigidBody *body0 = bodies[i];
+      RigidBody *body1 = bodies[j];
+
+      // Special case: skip tests for pairs of static bodies.
+      //
+      if (body0->fixed && body1->fixed)
+        continue;
+
+      // Test for sphere-sphere collision.
+      if (body0->geometry->getType() == kSphere &&
+          body1->geometry->getType() == kSphere) {
+        collisionDetectSphereSphere(body0, body1);
+      }
+      // Test for sphere-box collision
+      else if (body0->geometry->getType() == kSphere &&
+               body1->geometry->getType() == kBox) {
+        collisionDetectSphereBox(body0, body1);
+      }
+      // Test for box-sphere collision (order swap)
+      else if (body1->geometry->getType() == kSphere &&
+               body0->geometry->getType() == kBox) {
+        collisionDetectSphereBox(body1, body0);
+      }
+    }
+  }
 }
 
-void CollisionDetect::detectCollisions()
-{
-    // First, clear any existing contacts.
-    //
-    clear();
-
-    // Next, loop over all pairs of bodies and test for contacts.
-    //
-    auto bodies = m_rigidBodySystem->getBodies();
-    for(unsigned int i = 0; i < bodies.size(); ++i)
-    {
-        for(unsigned int j = i+1; j < bodies.size(); ++j)
-        {
-            RigidBody* body0 = bodies[i];
-            RigidBody* body1 = bodies[j];
-
-            // Special case: skip tests for pairs of static bodies.
-            //
-            if (body0->fixed && body1->fixed) 
-                continue;
-
-            // Test for sphere-sphere collision.
-            if( body0->geometry->getType() == kSphere &&
-                body1->geometry->getType() == kSphere )
-            {
-                collisionDetectSphereSphere(body0, body1);
-            }
-            // Test for sphere-box collision
-            else if( body0->geometry->getType() == kSphere &&
-                     body1->geometry->getType() == kBox )
-            {
-                collisionDetectSphereBox(body0, body1);
-            }
-            // Test for box-sphere collision (order swap)
-            else if( body1->geometry->getType() == kSphere &&
-                     body0->geometry->getType() == kBox )
-            {
-                collisionDetectSphereBox(body1, body0);
-            }
-        }
-    }
+void CollisionDetect::computeContactJacobians() {
+  // Build constraint Jacobians for all contacts
+  //
+  for (auto c : m_contacts) {
+    c->computeContactFrame();
+    c->computeJacobian();
+  }
 }
 
-void CollisionDetect::computeContactJacobians()
-{
-    // Build constraint Jacobians for all contacts
-    //
-    for(auto c : m_contacts)
-    {
-        c->computeContactFrame();
-        c->computeJacobian();
-    }
+void CollisionDetect::clear() {
+  // First, remove all contacts from rigid bodies.
+  //
+  auto bodies = m_rigidBodySystem->getBodies();
+  for (auto b : bodies) {
+    b->contacts.clear();
+  }
+
+  // Then, cleanup the local contact array.
+  //
+  for (auto c : m_contacts) {
+    delete c;
+  }
+  m_contacts.clear();
 }
 
-void CollisionDetect::clear()
-{
-    // First, remove all contacts from rigid bodies.
-    //
-    auto bodies = m_rigidBodySystem->getBodies();
-    for (auto b : bodies)
-    {
-        b->contacts.clear();
-    }
+void CollisionDetect::collisionDetectSphereSphere(RigidBody *body0,
+                                                  RigidBody *body1) {
+  Sphere *sphere0 = dynamic_cast<Sphere *>(body0->geometry.get());
+  Sphere *sphere1 = dynamic_cast<Sphere *>(body1->geometry.get());
 
-    // Then, cleanup the local contact array.
-    //
-    for(auto c : m_contacts)
-    {
-        delete c;
-    }
-    m_contacts.clear();
+  // Implement sphere-sphere collision detection.
+  // The function should check if a collision exists, and if it does
+  // compute the contact normal, contact point, and penetration depth.
+  //
+  Eigen::Vector3f vec = body0->x - body1->x;
 
+  const float rsum = (sphere0->radius + sphere1->radius);
+  const float dist = vec.norm();
+  if (dist < rsum) {
+    const Eigen::Vector3f n = vec / dist;
+    const Eigen::Vector3f p = 0.5f * ((body0->x - sphere0->radius * n) +
+                                      (body1->x + sphere1->radius * n));
+    const float phi = dist - rsum;
+
+    m_contacts.push_back(new Contact(body0, body1, p, n, phi));
+  }
 }
 
-void CollisionDetect::collisionDetectSphereSphere(RigidBody* body0, RigidBody* body1)
-{
-    Sphere* sphere0 = dynamic_cast<Sphere*>(body0->geometry.get());
-    Sphere* sphere1 = dynamic_cast<Sphere*>(body1->geometry.get());
+void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
+                                               RigidBody *body1) {
+  // TODO Implement sphere-box collision detection.
+  //      The function should check if a collision exists.
+  //
+  //      If it does, compute the contact normal, contact point, and penetration
+  //      depth and create a Contact and add it to m_contacts.
+  //
 
-    // Implement sphere-sphere collision detection.
-    // The function should check if a collision exists, and if it does
-    // compute the contact normal, contact point, and penetration depth.
-    //
-    Eigen::Vector3f vec = body0->x - body1->x;
+  Sphere *sphere = dynamic_cast<Sphere *>(body0->geometry.get());
+  Box *box = dynamic_cast<Box *>(body1->geometry.get());
 
-    const float rsum = (sphere0->radius + sphere1->radius);
-    const float dist = vec.norm();
-    if( dist < rsum )
-    {
-        const Eigen::Vector3f n = vec / dist;
-        const Eigen::Vector3f p = 0.5f * ((body0->x - sphere0->radius*n) + (body1->x + sphere1->radius*n));
-        const float phi = dist-rsum;
+  auto c_sphere = body0->x;
+  auto c_box = body1->x;
+  // position of center of sphere in box local frame
+  auto c_local = body1->q.inverse() * (c_sphere - c_box);
 
-        m_contacts.push_back( new Contact(body0, body1, p, n, phi) );
+  Eigen::Vector3f g; // closest point to sphere center on the box
+  Eigen::Vector3f h = box->dim / 2.;
+  for (int i = 0; i < 3; i++) {
+    if (-h[i] > c_local[i]) {
+      g[i] = -h[i];
+    } else if (h[i] < c_local[i]) {
+      g[i] = h[i];
+    } else {
+      c_local[i];
     }
-}
+  }
 
-void CollisionDetect::collisionDetectSphereBox(RigidBody* body0, RigidBody* body1)
-{
-    // TODO Implement sphere-box collision detection.
-    //      The function should check if a collision exists.
-    // 
-    //      If it does, compute the contact normal, contact point, and penetration depth and
-    //      create a Contact and add it to m_contacts.
-    //
+  if ((g - c_local).norm() < sphere->radius) {
+    // the closest point to the sphere center is less than the radius of the
+    // sphere
+    Eigen::Vector3f n;
+    float phi;
+    // case 1: sphere center lies outside the box extents in at least one
+    // dimension
+    if ((g - c_local).norm() > 0) {
+      n = body1->q * (c_local - g).normalized();
+      phi = (g - c_local).norm() - sphere->radius;
+      //   m_contacts.push_back(new Contact(body0, body1, p, n, phi));
+    }
 
-    Sphere* sphere = dynamic_cast<Sphere*>(body0->geometry.get());
-    Box* box = dynamic_cast<Box*>(body1->geometry.get());
+    // case 2: sphere center lies entirely inside the box
+    else {
+      // determine which of the box faces is closest to c_local
 
+      Eigen::Vector3f dist = h - c_local.cwiseAbs();
+
+      Eigen::Index axis;
+      phi = -dist.minCoeff(&axis);
+
+      n = Eigen::Vector3f::Zero();
+      n[axis] = (c_local[axis] >= 0.0) ? 1.0 : -1.0;
+      n = body1->q * n;
+      g = c_local;
+      g[axis] = n[axis] * h[axis];
+    }
+
+    Eigen::Vector3f p = body1->q * g + c_box;
+
+    m_contacts.push_back(new Contact(body0, body1, p, n, phi));
+  }
 }
