@@ -76,6 +76,17 @@ void SimViewer::start() {
   polyscope::options::maxFPS = 60;
   polyscope::options::groundPlaneEnabled = false;
 
+  // config init window size and location
+  int screenWidth = 1920;
+  int screenHeight = 1080;
+
+  int width = 1280;
+  int height = 720;
+
+  polyscope::view::windowWidth = width;
+  polyscope::view::windowHeight = height;
+  polyscope::view::initWindowPosX = (screenWidth - width) / 2;
+  polyscope::view::initWindowPosY = (screenHeight - height) / 2;
   // initialize
   polyscope::init();
 
@@ -86,7 +97,7 @@ void SimViewer::start() {
   m_rigidBodySystem->setPreStepFunc(
       std::bind(&SimViewer::preStep, this, std::placeholders::_1));
 
-  createSphereOnBox();
+  createSphereOnBox(); // default rigid body system
 
   // Show the window
   polyscope::show();
