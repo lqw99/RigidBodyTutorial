@@ -1,15 +1,13 @@
 #include "viewer/SimViewer.h"
 
 #include "imgui.h"
-#include "polyscope/pick.h"
+
 #include "polyscope/point_cloud.h"
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 #include "polyscope/view.h"
 
-#include <cmath>
 #include <functional>
-#include <iostream>
 
 #include "contact/Contact.h"
 #include "rigidbody/RigidBodySystem.h"

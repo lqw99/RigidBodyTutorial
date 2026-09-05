@@ -4,7 +4,6 @@
 #include "contact/Contact.h"
 #include "rigidbody/RigidBody.h"
 #include "rigidbody/RigidBodySystem.h"
-#include <iostream>
 
 CollisionDetect::CollisionDetect(RigidBodySystem *rigidBodySystem)
     : m_rigidBodySystem(rigidBodySystem) {}
@@ -124,10 +123,6 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
   }
 
   if ((g - c_local).norm() < sphere->radius) {
-    // std::cout << "contact point:\n";
-    // std::cout << g << std::endl;
-    // std::cout << "sphere center:\n";
-    // std::cout << c_sphere << std::endl;
     // the closest point to the sphere center is less than the radius of the
     // sphere
     Eigen::Vector3f n;

@@ -7,7 +7,6 @@
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
-#include <iostream>
 
 using Vec6f = Eigen::Vector<float, 6>;
 
@@ -50,10 +49,7 @@ bool check_tangent_impulse(float lambda_t, float lambda_n, float v_t, float mu,
 bool solve_contact(const Eigen::Matrix3f &A, const Eigen::Vector3f &x,
                    Eigen::VectorXf &lambda, float mu) {
   constexpr float eps = 1e-4;
-  // std::cout << "system in solve contact:\n"
-  //           << A << std::endl
-  //           << x << std::endl
-  //           << mu << std::endl;
+
   // separated contact
   if (x(0) >= -eps) {
     // std::cout << x << std::endl;
@@ -106,8 +102,6 @@ bool solve_contact(const Eigen::Matrix3f &A, const Eigen::Vector3f &x,
 
       Eigen::Vector3f xx = lu.solve(b);
 
-      // std::cout << "test lambda:\n" << xx << std::endl;
-
       if (xx(0) < -eps) // error in normal contact impulse
         continue;
 
@@ -123,7 +117,7 @@ bool solve_contact(const Eigen::Matrix3f &A, const Eigen::Vector3f &x,
         continue;
       }
       lambda = xx;
-      // std::cout << "true lambda:\n" << lambda << std::endl;
+
       return true;
     }
   }
@@ -245,15 +239,6 @@ void SolverBoxPGS::solve(float h) {
 
         auto Aii = Acontactii[i];
         bool is_solved = solve_contact(Aii, b, c->lambda, c->mu);
-
-        // if (!is_solved) {
-        //   std::cout << "no contact state resolved" << std::endl;
-        // }
-
-        // if (is_solved) {
-        //   std::cout << Aii << std::endl << bs[i] << std::endl << x <<
-        //   std::endl; std::cout << c->lambda << std::endl;
-        // }
       }
     }
   }

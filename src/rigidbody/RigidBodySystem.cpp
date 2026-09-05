@@ -5,7 +5,6 @@
 #include "rigidbody/RigidBody.h"
 
 #include "solvers/SolverBoxPGS.h"
-#include <iostream>
 
 namespace Eigen {
 typedef Matrix<float, 6, 1, ColMajor> Vector6f;
@@ -94,8 +93,6 @@ void RigidBodySystem::step(float dt) {
     if (b->fixed) {
       continue;
     }
-    // std::cout << "fc in body:\n";
-    // std::cout << b->fc << std::endl;
     b->xdot += dt * (1. / b->mass) * (b->f + b->fc);
     b->omega +=
         dt * b->IbodyInv * (b->tau + b->tau - b->omega.cross(b->I * b->omega));
@@ -149,15 +146,11 @@ void RigidBodySystem::calcConstraintForces(float dt) {
   //
   auto contacts = m_collisionDetect->getContacts();
   for (const auto c : contacts) {
-    // std::cout << "contact impulse in rbs:\n";
-    // std::cout << c->lambda << std::endl;
     // Convert impulses in c->lambda to forces.
     //
 
     const Eigen::Vector6f f0 = c->J0.transpose() * c->lambda / dt;
     const Eigen::Vector6f f1 = c->J1.transpose() * c->lambda / dt;
-
-    // std::cout << c->n << std::endl << c->J0 << std::endl << f0 << std::endl;
 
     if (!c->body0->fixed) {
       c->body0->fc += f0.head<3>();
