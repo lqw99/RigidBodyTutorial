@@ -17,14 +17,14 @@ SolverBoxPGS::SolverBoxPGS(RigidBodySystem *_rigidBodySystem)
 bool check_tangent_impulse(float lambda_t, float lambda_n, float v_t, float mu,
                            int state) {
   float lower = -mu * lambda_n;
-  float upper = mu * lambda_t;
+  float upper = mu * lambda_n;
 
   float eps = 1e-4;
 
   switch (state) {
   case 0: // free in tangent
-    // if (lambda_t < lower - eps || lambda_t > upper + eps)
-    //   return false;
+    if (lambda_t < lower - eps || lambda_t > upper + eps)
+      return false;
     if (std::abs(v_t) > eps)
       return false;
     break;
@@ -56,6 +56,7 @@ bool solve_contact(const Eigen::Matrix3f &A, const Eigen::Vector3f &x,
   //           << mu << std::endl;
   // separated contact
   if (x(0) >= -eps) {
+    // std::cout << x << std::endl;
     lambda.setZero();
     return true;
   }
@@ -110,7 +111,7 @@ bool solve_contact(const Eigen::Matrix3f &A, const Eigen::Vector3f &x,
       if (xx(0) < -eps) // error in normal contact impulse
         continue;
 
-      Eigen::Vector3f v = K * xx + x;
+      Eigen::Vector3f v = A * xx + x;
       // no normal velocity when normal contact is active
       if (std::abs(v(0)) > eps)
         continue;
@@ -145,13 +146,14 @@ void SolverBoxPGS::solve(float h) {
     // TODO Compute the right-hand side vector : b = -gamma*phi/h - J*vel -
     // dt*JMinvJT*force
     //
+    float gamma = 0.2;
     std::vector<Eigen::Vector3f> bs(numContacts);
     for (int i = 0; i < numContacts; ++i) {
       bs[i] = Eigen::Vector3f::Zero();
 
       auto c = contacts[i];
 
-      bs[i] -= c->k * c->phi / h;
+      bs[i] += gamma * c->phi / h;
       auto v0 = c->body0->xdot;
       auto w0 = c->body0->omega;
       auto v1 = c->body1->xdot;
@@ -160,7 +162,7 @@ void SolverBoxPGS::solve(float h) {
       u0 << v0, w0;
       u1 << v1, w1;
 
-      bs[i] -= (c->J0 * u0 + c->J1 * u1);
+      bs[i] += (c->J0 * u0 + c->J1 * u1);
       auto f0 = c->body0->f;
       auto tau0 = c->body0->tau;
       auto f1 = c->body1->f;
@@ -169,7 +171,7 @@ void SolverBoxPGS::solve(float h) {
       Vec6f ff0, ff1;
       ff0 << f0, tau0;
       ff1 << f1, tau1;
-      bs[i] -= h * (c->J0Minv * ff0 + c->J1Minv * ff1);
+      bs[i] += h * (c->J0Minv * ff0 + c->J1Minv * ff1);
 
       // TODO Compute the diagonal term : Aii = J0*Minv0*J0^T + J1*Minv1*J1^T
       //
@@ -196,33 +198,37 @@ void SolverBoxPGS::solve(float h) {
 
         auto c = contacts[i];
         auto body0 = c->body0;
-        for (const auto c_other : body0->contacts) {
-          if (c_other != c) {
-            auto lambda_other = c_other->lambda;
-            JBlock J_other;
-            if (c_other->body0 == body0) {
-              J_other = c_other->J1;
-            } else {
-              J_other = c_other->J0;
+        if (!body0->fixed) {
+          for (auto c_other : body0->contacts) {
+            if (c_other != c) {
+              auto lambda_other = c_other->lambda;
+              JBlock J_other;
+              if (c_other->body0 == body0) {
+                J_other = c_other->J0;
+              } else {
+                J_other = c_other->J1;
+              }
+              b += (c->J0Minv * J_other.transpose()) * lambda_other;
             }
-            b += (c->J0Minv * J_other.transpose()) * lambda_other;
           }
         }
 
-        // TODO Loop over all other contacts involving c->body1
-        //      and accumulate : x -= (J0*Minv0*Jother^T) * lambda_other
-        //
+        // // TODO Loop over all other contacts involving c->body1
+        // //      and accumulate : x -= (J0*Minv0*Jother^T) * lambda_other
+        // //
         auto body1 = c->body1;
-        for (const auto c_other : body1->contacts) {
-          if (c_other != c) {
-            auto lambda_other = c_other->lambda;
-            JBlock J_other;
-            if (c_other->body0 == body1) {
-              J_other = c_other->J1;
-            } else {
-              J_other = c_other->J0;
+        if (!body1->fixed) {
+          for (auto c_other : body1->contacts) {
+            if (c_other != c) {
+              auto lambda_other = c_other->lambda;
+              JBlock J_other;
+              if (c_other->body0 == body1) {
+                J_other = c_other->J0;
+              } else {
+                J_other = c_other->J1;
+              }
+              b += (c->J1Minv * J_other.transpose()) * lambda_other;
             }
-            b += (c->J1Minv * J_other.transpose()) * lambda_other;
           }
         }
 
@@ -240,9 +246,9 @@ void SolverBoxPGS::solve(float h) {
         auto Aii = Acontactii[i];
         bool is_solved = solve_contact(Aii, b, c->lambda, c->mu);
 
-        if (!is_solved) {
-          std::cout << "no contact state resolved" << std::endl;
-        }
+        // if (!is_solved) {
+        //   std::cout << "no contact state resolved" << std::endl;
+        // }
 
         // if (is_solved) {
         //   std::cout << Aii << std::endl << bs[i] << std::endl << x <<

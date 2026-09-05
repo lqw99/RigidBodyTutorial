@@ -83,6 +83,7 @@ void RigidBodySystem::step(float dt) {
   // Compute constraint forces.
   // The LCP solver will be called here.
   //
+
   calcConstraintForces(dt);
 
   // TODO Perform numerical integration to first update the velocities of each
@@ -152,8 +153,11 @@ void RigidBodySystem::calcConstraintForces(float dt) {
     // std::cout << c->lambda << std::endl;
     // Convert impulses in c->lambda to forces.
     //
+
     const Eigen::Vector6f f0 = c->J0.transpose() * c->lambda / dt;
     const Eigen::Vector6f f1 = c->J1.transpose() * c->lambda / dt;
+
+    // std::cout << c->n << std::endl << c->J0 << std::endl << f0 << std::endl;
 
     if (!c->body0->fixed) {
       c->body0->fc += f0.head<3>();

@@ -102,7 +102,7 @@ public:
     RigidBody *bodySphere =
         new RigidBody(1.0f, new Sphere(0.5f), "resources/sphere.obj");
     bodySphere->x.y() = 4.0f;
-    // bodySphere->omega = Eigen::Vector3f(10.0f, 0.0f, 0.0f);
+    bodySphere->omega = Eigen::Vector3f(10.0f, 0.0f, 0.0f);
     bodySphere->mesh->setTransparency(0.8f);
 
     RigidBody *bodyBox =

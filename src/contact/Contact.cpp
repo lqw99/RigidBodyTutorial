@@ -52,7 +52,7 @@ void Contact::computeJacobian() {
 
   auto r0 = this->p - body0->x;
   auto r1 = this->p - body1->x;
-  auto nt = this->n.transpose();
+  auto nt = -(this->n.transpose());
   auto t1t = this->t1.transpose();
   auto t2t = this->t2.transpose();
 
@@ -75,8 +75,12 @@ void Contact::computeJacobian() {
   // However, together with the contact Jacobians J0 and J1, these will
   //   be used by the solver to assemble the blocked LCP matrices.
   //
-  J0Minv.block(0, 0, 3, 3) = (1.0f / body0->mass) * J0.block(0, 0, 3, 3);
-  J0Minv.block(0, 3, 3, 3) = J0.block(0, 3, 3, 3) * body0->Iinv;
-  J1Minv.block(0, 0, 3, 3) = (1.0f / body1->mass) * J1.block(0, 0, 3, 3);
-  J1Minv.block(0, 3, 3, 3) = J1.block(0, 3, 3, 3) * body1->Iinv;
+  if (!this->body0->fixed) {
+    J0Minv.block(0, 0, 3, 3) = (1.0f / body0->mass) * J0.block(0, 0, 3, 3);
+    J0Minv.block(0, 3, 3, 3) = J0.block(0, 3, 3, 3) * body0->Iinv;
+  }
+  if (!this->body1->fixed) {
+    J1Minv.block(0, 0, 3, 3) = (1.0f / body1->mass) * J1.block(0, 0, 3, 3);
+    J1Minv.block(0, 3, 3, 3) = J1.block(0, 3, 3, 3) * body1->Iinv;
+  }
 }

@@ -4,6 +4,7 @@
 #include "contact/Contact.h"
 #include "rigidbody/RigidBody.h"
 #include "rigidbody/RigidBodySystem.h"
+#include <iostream>
 
 CollisionDetect::CollisionDetect(RigidBodySystem *rigidBodySystem)
     : m_rigidBodySystem(rigidBodySystem) {}
@@ -84,10 +85,10 @@ void CollisionDetect::collisionDetectSphereSphere(RigidBody *body0,
   const float rsum = (sphere0->radius + sphere1->radius);
   const float dist = vec.norm();
   if (dist < rsum) {
-    const Eigen::Vector3f n = vec / dist;
+    const Eigen::Vector3f n = vec / dist; // body1 -> body0
     const Eigen::Vector3f p = 0.5f * ((body0->x - sphere0->radius * n) +
                                       (body1->x + sphere1->radius * n));
-    const float phi = dist - rsum;
+    const float phi = dist - rsum; // negative value
 
     m_contacts.push_back(new Contact(body0, body1, p, n, phi));
   }
@@ -118,11 +119,15 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
     } else if (h[i] < c_local[i]) {
       g[i] = h[i];
     } else {
-      c_local[i];
+      g[i] = c_local[i];
     }
   }
 
   if ((g - c_local).norm() < sphere->radius) {
+    // std::cout << "contact point:\n";
+    // std::cout << g << std::endl;
+    // std::cout << "sphere center:\n";
+    // std::cout << c_sphere << std::endl;
     // the closest point to the sphere center is less than the radius of the
     // sphere
     Eigen::Vector3f n;
@@ -130,9 +135,8 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
     // case 1: sphere center lies outside the box extents in at least one
     // dimension
     if ((g - c_local).norm() > 0) {
-      n = (body1->q * (c_local - g).normalized());
-      phi = (g - c_local).norm() - sphere->radius;
-      //   m_contacts.push_back(new Contact(body0, body1, p, n, phi));
+      n = (body1->q * (c_local - g).normalized()); // body1 -> body0
+      phi = (g - c_local).norm() - sphere->radius; // negative value
     }
 
     // case 2: sphere center lies entirely inside the box
@@ -146,7 +150,7 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
 
       n = Eigen::Vector3f::Zero();
       n[axis] = (c_local[axis] >= 0.0) ? 1.0 : -1.0;
-      n = (body1->q * n);
+      n = (body1->q * n); // body1 -> body0
       g = c_local;
       g[axis] = n[axis] * h[axis];
     }
