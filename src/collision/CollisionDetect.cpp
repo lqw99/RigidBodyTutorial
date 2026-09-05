@@ -130,7 +130,7 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
     // case 1: sphere center lies outside the box extents in at least one
     // dimension
     if ((g - c_local).norm() > 0) {
-      n = body1->q * (c_local - g).normalized();
+      n = (body1->q * (c_local - g).normalized());
       phi = (g - c_local).norm() - sphere->radius;
       //   m_contacts.push_back(new Contact(body0, body1, p, n, phi));
     }
@@ -146,7 +146,7 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
 
       n = Eigen::Vector3f::Zero();
       n[axis] = (c_local[axis] >= 0.0) ? 1.0 : -1.0;
-      n = body1->q * n;
+      n = (body1->q * n);
       g = c_local;
       g[axis] = n[axis] * h[axis];
     }

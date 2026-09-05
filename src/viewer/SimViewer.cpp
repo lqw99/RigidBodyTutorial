@@ -140,10 +140,10 @@ void SimViewer::draw() {
 
     updateRigidBodyMeshes(*m_rigidBodySystem);
     updateContactPoints(*m_rigidBodySystem);
-    // only for debug step 2
-    if (!m_rigidBodySystem->getContacts().empty()) {
-      m_paused = true;
-    }
+    // // only for debug step 2
+    // if (!m_rigidBodySystem->getContacts().empty()) {
+    //   m_paused = true;
+    // }
 
     // Clear step-once flag.
     m_stepOnce = false;
