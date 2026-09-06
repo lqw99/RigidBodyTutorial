@@ -15,7 +15,7 @@ Mesh *MeshAssetRegistry::loadObj(const std::string &_filename) {
   }
 
   Mesh mesh;
-  OBJLoader::load(_filename, mesh.meshV, mesh.meshF);
+  OBJLoader::load_obj(_filename, mesh.meshV, mesh.meshF);
 
   m_meshCache[key] = mesh;
   return &(m_meshCache[key]);

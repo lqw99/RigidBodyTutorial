@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 4.4)
 project(rigidBodyTutorial)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -34,6 +34,11 @@ set(viewer_SOURCE src/viewer/SimViewer.cpp)
 
 add_subdirectory(deps/polyscope)
 add_subdirectory(deps/eigen)
+add_subdirectory(deps/tinyobjloader)
+
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 
 add_executable (rigidBodyTutorial main.cpp
           ${contact_HEADERS} ${contact_SOURCE} 
@@ -43,8 +48,9 @@ add_executable (rigidBodyTutorial main.cpp
 		  ${util_HEADERS} ${util_SOURCE}
           ${viewer_HEADERS} ${viewer_SOURCE} )
 
-target_link_libraries(rigidBodyTutorial PRIVATE polyscope Eigen3::Eigen)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+target_link_libraries(rigidBodyTutorial PRIVATE polyscope Eigen3::Eigen tinyobjloader)
+
 
 file(
     COPY ${PROJECT_SOURCE_DIR}/resources
