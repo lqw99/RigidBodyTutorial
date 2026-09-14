@@ -31,44 +31,55 @@ void Contact::computeContactFrame() {
   //
   //  The first bases direction is given by the normal, n.
   //  Use it to compute the other two directions.
-
-  // !TODO Compute first tangent direction t1
-  //
   this->t1 = n.cross(Eigen::Vector3f(1, 0, 0));
   if (this->t1.norm() < 1e-6) {
     this->t1 = n.cross(Eigen::Vector3f(0, 1, 0));
   }
-
-  // !TODO Compute second tangent direction t2.
-  //
   this->t2 = n.cross(this->t1);
 }
 
+JBlock Contact::compute_Jacobian(const Eigen::Vector3f &n,
+                                 const Eigen::Vector3f &t1,
+                                 const Eigen::Vector3f &t2,
+                                 const Eigen::Vector3f &r) {
+  JBlock J;
+  J.setZero(3, 6);
+  auto nt = n.transpose();
+  auto t1t = t1.transpose();
+  auto t2t = t2.transpose();
+  J.block<1, 3>(0, 0) = nt;
+  J.block<1, 3>(0, 3) = -(nt * skew(r));
+  J.block<1, 3>(1, 0) = t1t;
+  J.block<1, 3>(1, 3) = -(t1t * skew(r));
+  J.block<1, 3>(2, 0) = t2t;
+  J.block<1, 3>(2, 3) = -(t2t * skew(r));
+  return J;
+}
+
 void Contact::computeJacobian() {
-  // TODO Compute the Jacobians J0 and J1
-  // for body0 and body1, respectively.
-  //
-  //
 
   auto r0 = this->p - body0->x;
   auto r1 = this->p - body1->x;
-  auto nt = -(this->n.transpose());
-  auto t1t = this->t1.transpose();
-  auto t2t = this->t2.transpose();
+  // auto nt = -(this->n.transpose()); // body0 -> body1
+  // auto t1t = this->t1.transpose();
+  // auto t2t = this->t2.transpose();
+  // Delta v = v_c_1 - v_c_0 = J0 * v0 + J1 * v1
 
-  this->J0.block<1, 3>(0, 0) = -nt;
-  this->J0.block<1, 3>(0, 3) = nt * skew(r0);
-  this->J0.block<1, 3>(1, 0) = -t1t;
-  this->J0.block<1, 3>(1, 3) = t1t * skew(r0);
-  this->J0.block<1, 3>(2, 0) = -t2t;
-  this->J0.block<1, 3>(2, 3) = t2t * skew(r0);
+  this->J0 = compute_Jacobian(-n, -t1, -t2, r0);
+  // this->J0.block<1, 3>(0, 0) = -nt;
+  // this->J0.block<1, 3>(0, 3) = nt * skew(r0);
+  // this->J0.block<1, 3>(1, 0) = -t1t;
+  // this->J0.block<1, 3>(1, 3) = t1t * skew(r0);
+  // this->J0.block<1, 3>(2, 0) = -t2t;
+  // this->J0.block<1, 3>(2, 3) = t2t * skew(r0);
 
-  this->J1.block<1, 3>(0, 0) = nt;
-  this->J1.block<1, 3>(0, 3) = -nt * skew(r1);
-  this->J1.block<1, 3>(1, 0) = t1t;
-  this->J1.block<1, 3>(1, 3) = -t1t * skew(r1);
-  this->J1.block<1, 3>(2, 0) = t2t;
-  this->J1.block<1, 3>(2, 3) = -t2t * skew(r1);
+  this->J1 = compute_Jacobian(n, t1, t2, r1);
+  // this->J1.block<1, 3>(0, 0) = nt;
+  // this->J1.block<1, 3>(0, 3) = -nt * skew(r1);
+  // this->J1.block<1, 3>(1, 0) = t1t;
+  // this->J1.block<1, 3>(1, 3) = -t1t * skew(r1);
+  // this->J1.block<1, 3>(2, 0) = t2t;
+  // this->J1.block<1, 3>(2, 3) = -t2t * skew(r1);
 
   // Compute the J M^-1 blocks for each body. The code is provided.
   //

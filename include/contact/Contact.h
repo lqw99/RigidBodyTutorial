@@ -31,7 +31,7 @@ public:
   virtual ~Contact();
 
   Eigen::Vector3f p;      // The contact point.
-  Eigen::Vector3f n;      // The contact normal.
+  Eigen::Vector3f n;      // The contact normal, from body0 to body1
   Eigen::Vector3f t1, t2; // Tangent directions.
   float mu;               // Coefficient of friction.
   float pene;             // Penetration
@@ -60,4 +60,8 @@ public:
 protected:
   // Default constructor.
   explicit Contact();
+
+private:
+  JBlock compute_Jacobian(const Eigen::Vector3f &n, const Eigen::Vector3f &t1,
+                          const Eigen::Vector3f &t2, const Eigen::Vector3f &r);
 };

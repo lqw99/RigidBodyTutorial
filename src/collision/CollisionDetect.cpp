@@ -79,7 +79,7 @@ void CollisionDetect::collisionDetectSphereSphere(RigidBody *body0,
   // The function should check if a collision exists, and if it does
   // compute the contact normal, contact point, and penetration depth.
   //
-  Eigen::Vector3f vec = body0->x - body1->x;
+  Eigen::Vector3f vec = body1->x - body0->x;
 
   const float rsum = (sphere0->radius + sphere1->radius);
   const float dist = vec.norm();
@@ -95,12 +95,8 @@ void CollisionDetect::collisionDetectSphereSphere(RigidBody *body0,
 
 void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
                                                RigidBody *body1) {
-  // TODO Implement sphere-box collision detection.
-  //      The function should check if a collision exists.
-  //
   //      If it does, compute the contact normal, contact point, and penetration
   //      depth and create a Contact and add it to m_contacts.
-  //
 
   Sphere *sphere = dynamic_cast<Sphere *>(body0->geometry.get());
   Box *box = dynamic_cast<Box *>(body1->geometry.get());
@@ -130,8 +126,8 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
     // case 1: sphere center lies outside the box extents in at least one
     // dimension
     if ((g - c_local).norm() > 0) {
-      n = (body1->q * (c_local - g).normalized()); // body1 -> body0
-      phi = (g - c_local).norm() - sphere->radius; // negative value
+      n = -(body1->q * (c_local - g).normalized()); // body0 -> body1
+      phi = (g - c_local).norm() - sphere->radius;  // negative value
     }
 
     // case 2: sphere center lies entirely inside the box
@@ -145,7 +141,7 @@ void CollisionDetect::collisionDetectSphereBox(RigidBody *body0,
 
       n = Eigen::Vector3f::Zero();
       n[axis] = (c_local[axis] >= 0.0) ? 1.0 : -1.0;
-      n = (body1->q * n); // body1 -> body0
+      n = -(body1->q * n); // body0 -> body1
       g = c_local;
       g[axis] = n[axis] * h[axis];
     }
