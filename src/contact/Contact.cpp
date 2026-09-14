@@ -47,12 +47,10 @@ JBlock Contact::compute_Jacobian(const Eigen::Vector3f &n,
   auto nt = n.transpose();
   auto t1t = t1.transpose();
   auto t2t = t2.transpose();
-  J.block<1, 3>(0, 0) = nt;
-  J.block<1, 3>(0, 3) = -(nt * skew(r));
-  J.block<1, 3>(1, 0) = t1t;
-  J.block<1, 3>(1, 3) = -(t1t * skew(r));
-  J.block<1, 3>(2, 0) = t2t;
-  J.block<1, 3>(2, 3) = -(t2t * skew(r));
+  auto rx = skew(r);
+  J << nt, -(nt * rx),  // row 1
+      t1t, -(t1t * rx), // row 2
+      t2t, -(t2t * rx); // row 3
   return J;
 }
 
@@ -60,26 +58,11 @@ void Contact::computeJacobian() {
 
   auto r0 = this->p - body0->x;
   auto r1 = this->p - body1->x;
-  // auto nt = -(this->n.transpose()); // body0 -> body1
-  // auto t1t = this->t1.transpose();
-  // auto t2t = this->t2.transpose();
+
   // Delta v = v_c_1 - v_c_0 = J0 * v0 + J1 * v1
 
   this->J0 = compute_Jacobian(-n, -t1, -t2, r0);
-  // this->J0.block<1, 3>(0, 0) = -nt;
-  // this->J0.block<1, 3>(0, 3) = nt * skew(r0);
-  // this->J0.block<1, 3>(1, 0) = -t1t;
-  // this->J0.block<1, 3>(1, 3) = t1t * skew(r0);
-  // this->J0.block<1, 3>(2, 0) = -t2t;
-  // this->J0.block<1, 3>(2, 3) = t2t * skew(r0);
-
   this->J1 = compute_Jacobian(n, t1, t2, r1);
-  // this->J1.block<1, 3>(0, 0) = nt;
-  // this->J1.block<1, 3>(0, 3) = -nt * skew(r1);
-  // this->J1.block<1, 3>(1, 0) = t1t;
-  // this->J1.block<1, 3>(1, 3) = -t1t * skew(r1);
-  // this->J1.block<1, 3>(2, 0) = t2t;
-  // this->J1.block<1, 3>(2, 3) = -t2t * skew(r1);
 
   // Compute the J M^-1 blocks for each body. The code is provided.
   //
@@ -87,11 +70,11 @@ void Contact::computeJacobian() {
   //   be used by the solver to assemble the blocked LCP matrices.
   //
   if (!this->body0->fixed) {
-    J0Minv.block(0, 0, 3, 3) = (1.0f / body0->mass) * J0.block(0, 0, 3, 3);
-    J0Minv.block(0, 3, 3, 3) = J0.block(0, 3, 3, 3) * body0->Iinv;
+    J0Minv << J0.block(0, 0, 3, 3) * (1.0f / body0->mass),
+        J0.block(0, 3, 3, 3) * body0->Iinv;
   }
   if (!this->body1->fixed) {
-    J1Minv.block(0, 0, 3, 3) = (1.0f / body1->mass) * J1.block(0, 0, 3, 3);
-    J1Minv.block(0, 3, 3, 3) = J1.block(0, 3, 3, 3) * body1->Iinv;
+    J1Minv << J1.block(0, 0, 3, 3) * (1.0f / body1->mass),
+        J1.block(0, 3, 3, 3) * body1->Iinv;
   }
 }

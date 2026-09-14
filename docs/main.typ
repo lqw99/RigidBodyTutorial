@@ -7,7 +7,7 @@
 
 boxed-LCP(BLCP)
 
-- `void Contact::computeContactFrame()` compute the contact frame that includes the normal $n$ and the two tangent directions, $t$ and $b$ and the normal is already given by collsion detection, in code, two tangent directions are $t_1$ and $t_2$
+- `void Contact::computeContactFrame()` compute the contact frame that includes the normal $n$ and the two tangent directions, $t$ and $b$ and the normal is already given by collsion detection, in code, two tangent directions are $t_1$ and $t_2$, normal is pointing body1 from body0
 
 - `void Contact::computeJacobian()` compute the constraint Jacobian based on
 

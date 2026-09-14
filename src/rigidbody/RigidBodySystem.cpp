@@ -1,5 +1,6 @@
 #include "rigidbody/RigidBodySystem.h"
 
+#include "Eigen/Geometry"
 #include "collision/CollisionDetect.h"
 #include "contact/Contact.h"
 #include "rigidbody/RigidBody.h"
@@ -14,11 +15,14 @@ typedef Matrix<float, 4, 3, ColMajor> KinematicMap;
 namespace {
 static inline Eigen::Quaternionf kinematicMap(const Eigen::Quaternionf &q,
                                               const Eigen::Vector3f &omega) {
-  return 0.5f * Eigen::Quaternionf(
-                    -q.x() * omega.x() - q.y() * omega.y() - q.z() * omega.z(),
-                    q.w() * omega.x() + q.z() * omega.y() - q.y() * omega.z(),
-                    -q.z() * omega.x() + q.w() * omega.y() + q.x() * omega.z(),
-                    -q.y() * omega.x() - q.x() * omega.y() + q.w() * omega.z());
+  auto w = Eigen::Quaternionf(0, omega);
+  return 0.5f * w * q;
+  // return 0.5f * Eigen::Quaternionf(
+  //                   -q.x() * omega.x() - q.y() * omega.y() - q.z() *
+  //                   omega.z(), q.w() * omega.x() + q.z() * omega.y() - q.y()
+  //                   * omega.z(), -q.z() * omega.x() + q.w() * omega.y() +
+  //                   q.x() * omega.z(), -q.y() * omega.x() - q.x() * omega.y()
+  //                   + q.w() * omega.z());
 }
 } // namespace
 
@@ -42,7 +46,7 @@ void RigidBodySystem::step(float dt) {
   // Cleanup contacts from the previous time step.
   //
   for (auto b : m_bodies) {
-    b->f = b->mass * Eigen::Vector3f(0.f, -9.81f, 0.f);
+    b->f = b->mass * b->grav;
     b->tau.setZero();
     b->fc.setZero();
     b->tauc.setZero();
@@ -98,7 +102,8 @@ void RigidBodySystem::step(float dt) {
         dt * b->IbodyInv * (b->tau + b->tau - b->omega.cross(b->I * b->omega));
 
     auto dq = kinematicMap(b->q, b->omega);
-    b->q.coeffs() += dt * 0.5 * dq.coeffs();
+    // b->q.coeffs() += dt * 0.5 * dq.coeffs();
+    b->q = b->q + dt * 0.5f * dq;
     b->x += dt * b->xdot;
   }
 }

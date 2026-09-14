@@ -50,7 +50,7 @@ public:
         new RigidBody(1.0f, new Box(Eigen::Vector3f(0.4f, 4.0f, 10.0f)),
                       "resources/box_side.obj");
     RigidBody *body3 =
-        new RigidBody(1.0f, new Box(Eigen::Vector3f(0.4f, 4.0f, 10.4f)),
+        new RigidBody(1.0f, new Box(Eigen::Vector3f(0.4f, 4.0f, 10.0f)),
                       "resources/box_side.obj");
     RigidBody *body4 =
         new RigidBody(1.0f, new Box(Eigen::Vector3f(10.0f, 0.4f, 10.0f)),
@@ -114,6 +114,38 @@ public:
     rigidBodySystem.addBody(bodyBox);
 
     bodySphere->mesh->setSurfaceColor({0.1f, 1.0f, 0.2f})->setEdgeWidth(1.0f);
+    bodyBox->mesh->setSurfaceColor({0.2f, 0.2f, 0.2f})
+        ->setSmoothShade(false)
+        ->setTransparency(0.4f);
+  }
+
+  static void createSimpleBox(RigidBodySystem &rigidBodySystem) {
+    rigidBodySystem.clear();
+    polyscope::removeAllStructures();
+
+    std::cout << "Loading simple-box scenario." << std::endl;
+
+    // // Create a sphere.
+    // RigidBody *bodySphere =
+    //     new RigidBody(1.0f, new Sphere(0.5f), "resources/sphere.obj");
+    // bodySphere->x.y() = 4.0f;
+    // bodySphere->omega = Eigen::Vector3f(10.0f, 0.0f, 0.0f);
+    // bodySphere->mesh->setTransparency(0.8f);
+
+    RigidBody *bodyBox =
+        new RigidBody(1.0f, new Box(Eigen::Vector3f(10.0f, 0.4f, 10.0f)),
+                      "resources/box_bot.obj");
+    // bodyBox->fixed = true;
+    bodyBox->omega = Eigen::Vector3f(0.0f, 0.0f, 0.f);
+    // rigidBodySystem.addBody(bodySphere);
+    bodyBox->addForceAtPos({-5, 0, -5}, {0, 0, 100});
+    bodyBox->addForceAtPos({5, 0, -5}, {0, 0, -100});
+    bodyBox->grav.setZero();
+
+    rigidBodySystem.addBody(bodyBox);
+
+    // bodySphere->mesh->setSurfaceColor({0.1f, 1.0f,
+    // 0.2f})->setEdgeWidth(1.0f);
     bodyBox->mesh->setSurfaceColor({0.2f, 0.2f, 0.2f})
         ->setSmoothShade(false)
         ->setTransparency(0.4f);
