@@ -46,8 +46,8 @@ void RigidBodySystem::step(float dt) {
   // Cleanup contacts from the previous time step.
   //
   for (auto b : m_bodies) {
-    b->f = b->mass * b->grav;
-    b->tau.setZero();
+    // b->f = b->mass * b->grav;
+    // b->tau.setZero();
     b->fc.setZero();
     b->tauc.setZero();
     b->contacts.clear();
@@ -104,6 +104,7 @@ void RigidBodySystem::step(float dt) {
     auto dq = kinematicMap(b->q, b->omega);
     // b->q.coeffs() += dt * 0.5 * dq.coeffs();
     b->q = b->q + dt * 0.5f * dq;
+    b->q.normalize();
     b->x += dt * b->xdot;
   }
 }

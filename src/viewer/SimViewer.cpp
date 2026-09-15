@@ -115,7 +115,7 @@ void SimViewer::drawGUI() {
   ImGui::SliderFloat("Friction coeff.", &(m_rigidBodySystem->mu), 0.0f, 2.0f,
                      "%.2f");
   ImGui::PopItemWidth();
-
+  // polyscope::options::automaticallyComputeSceneExtents = true;
   if (ImGui::Button("Sphere on box")) {
     createSphereOnBox();
   }
@@ -125,6 +125,7 @@ void SimViewer::drawGUI() {
   if (ImGui::Button("simple box")) {
     createSimpleBox();
   }
+  // polyscope::options::automaticallyComputeSceneExtents = false;
 }
 
 void SimViewer::draw() {

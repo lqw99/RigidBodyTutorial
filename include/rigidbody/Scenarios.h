@@ -2,6 +2,7 @@
 
 #include "RigidBody.h"
 #include "RigidBodySystem.h"
+#include "polyscope/point_cloud.h"
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 
@@ -122,15 +123,26 @@ public:
   static void createSimpleBox(RigidBodySystem &rigidBodySystem) {
     rigidBodySystem.clear();
     polyscope::removeAllStructures();
+    Eigen::MatrixXf origin(1, 3);
+
+    origin.setZero();
+    auto pointCloud = polyscope::registerPointCloud("origin", origin);
+    pointCloud->setPointColor({1.0f, 0.0f, 0.0f});
+    pointCloud->setPointRadius(0.01);
+    pointCloud->addVectorQuantity("x", Eigen::RowVector3d(1.0, 0.0, 0.0))
+        ->setVectorColor({1.0f, 0.0f, 0.0f})
+        ->setVectorLengthScale(0.5f)
+        ->setEnabled(true);
+    pointCloud->addVectorQuantity("y", Eigen::RowVector3d(0.0, 1.0, 0.0))
+        ->setVectorColor({0.0f, 1.0f, 0.0f})
+        ->setVectorLengthScale(0.5f)
+        ->setEnabled(true);
+    pointCloud->addVectorQuantity("z", Eigen::RowVector3d(0.0, 0.0, 1.0))
+        ->setVectorColor({0.0f, 0.0f, 1.0f})
+        ->setVectorLengthScale(0.5f)
+        ->setEnabled(true);
 
     std::cout << "Loading simple-box scenario." << std::endl;
-
-    // // Create a sphere.
-    // RigidBody *bodySphere =
-    //     new RigidBody(1.0f, new Sphere(0.5f), "resources/sphere.obj");
-    // bodySphere->x.y() = 4.0f;
-    // bodySphere->omega = Eigen::Vector3f(10.0f, 0.0f, 0.0f);
-    // bodySphere->mesh->setTransparency(0.8f);
 
     RigidBody *bodyBox =
         new RigidBody(1.0f, new Box(Eigen::Vector3f(10.0f, 0.4f, 10.0f)),
@@ -138,8 +150,8 @@ public:
     // bodyBox->fixed = true;
     bodyBox->omega = Eigen::Vector3f(0.0f, 0.0f, 0.f);
     // rigidBodySystem.addBody(bodySphere);
-    bodyBox->addForceAtPos({-5, 0, -5}, {0, 0, 100});
-    bodyBox->addForceAtPos({5, 0, -5}, {0, 0, -100});
+    bodyBox->addForceAtPos({-5, 0, 5}, {0, 0, 1});
+    bodyBox->addForceAtPos({5, 0, 5}, {0, 0, -1});
     bodyBox->grav.setZero();
 
     rigidBodySystem.addBody(bodyBox);
