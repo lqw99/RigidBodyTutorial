@@ -7,3 +7,12 @@
 [submodule "deps/tinyobjloader"]
 	path = deps/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "deps/libccd"]
+	path = deps/libccd
+	url = https://github.com/danfis/libccd.git
+[submodule "deps/fcl"]
+	path = deps/fcl
+	url = https://github.com/flexible-collision-library/fcl.git
+[submodule "deps/googletest"]
+	path = deps/googletest
+	url = https://github.com/google/googletest.git
