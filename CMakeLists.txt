@@ -3,7 +3,7 @@ project(rigidBodyTutorial)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
  
 set(collision_HEADERS include/collision/CollisionDetect.h 
@@ -31,16 +31,38 @@ set(util_SOURCE src/util/OBJLoader.cpp
 set(viewer_HEADERS include/viewer/SimViewer.h)
 set(viewer_SOURCE src/viewer/SimViewer.cpp)
         
-
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/polyscope)
-add_subdirectory(deps/eigen)
+set(EIGEN_INSTALL ON CACHE BOOL "" FORCE)
+add_subdirectory(deps/eigen SYSTEM)
 add_subdirectory(deps/tinyobjloader)
+add_subdirectory(deps/libccd)
+
+set(
+    ccd_DIR
+    "${PROJECT_SOURCE_DIR}/cmake"
+    CACHE PATH
+    "libccd package config"
+    FORCE
+)
+set(
+    FCL_STATIC_LIBRARY
+    ON
+    CACHE BOOL
+    "Build FCL as static library"
+    FORCE
+)
+
+add_subdirectory(deps/fcl)
+
+
+add_subdirectory(deps/googletest)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
-add_executable (rigidBodyTutorial main.cpp
+add_executable (rigidBodyTutorial tests/test_fcl_box_box.cpp
           ${contact_HEADERS} ${contact_SOURCE} 
           ${collision_HEADERS} ${collision_SOURCE}
           ${rigidbody_HEADERS} ${rigidbody_SOURCE}
@@ -49,7 +71,7 @@ add_executable (rigidBodyTutorial main.cpp
           ${viewer_HEADERS} ${viewer_SOURCE} )
 
 
-target_link_libraries(rigidBodyTutorial PRIVATE polyscope Eigen3::Eigen tinyobjloader)
+target_link_libraries(rigidBodyTutorial PRIVATE polyscope Eigen3::Eigen tinyobjloader ccd fcl GTest::gtest_main)
 
 
 file(
